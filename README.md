@@ -9,5 +9,5 @@ Get the latest release from the [Releases](https://github.com/FameForecast/FameF
 ## Features
 - Monitor multiple Twitch streams simultaneously
 - Real-time audio transcription (speech-to-text)
-- Works completely offline after setup
-- No external dependencies required
+- No additional downloads required - works immediately after setup
+- All processing done locally on your machine
