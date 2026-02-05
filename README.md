@@ -1,4 +1,4 @@
-# FameForecast TextView
+# FameForecastTextView
 
 Multi-stream chat viewer with live audio transcription for content creators.
 
