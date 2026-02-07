@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FameForecastTextView - Setup</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/themes.css') }}">
+</head>
+<body class="theme-dark setup-page">
+    <div class="setup-container">
+        <div class="setup-header">
+            <h1 class="setup-title">{{ app_name }} Setup</h1>
+            <p class="setup-subtitle">Multi-stream chat + transcription viewer</p>
+        </div>
+
+        <!-- Step 1: Create Twitch App -->
+        <div class="setup-section">
+            <h2 class="section-title">Step 1: Create a Twitch Developer App</h2>
+            <ol class="instruction-list">
+                <li>Click the button below to open Twitch Developer Console</li>
+                <li>Log in with your Twitch account</li>
+                <li>Click 'Register Your Application'</li>
+                <li>Use these values (click Copy buttons):</li>
+            </ol>
+
+            <div class="copyable-fields">
+                <div class="field-row">
+                    <label>App Name:</label>
+                    <input type="text" readonly value="{{ app_name }}" id="field-app-name">
+                    <button type="button" class="btn-copy" onclick="copyField('field-app-name')">Copy</button>
+                </div>
+                <div class="field-row">
+                    <label>OAuth Redirect URL:</label>
+                    <input type="text" readonly value="{{ redirect_uri }}" id="field-redirect">
+                    <button type="button" class="btn-copy" onclick="copyField('field-redirect')">Copy</button>
+                </div>
+            </div>
+
+            <ol class="instruction-list" start="5">
+                <li>Set Category to: <strong>Chat Bot</strong></li>
+                <li>Click 'Create' then 'Manage' to see your credentials</li>
+            </ol>
+
+            <button type="button" class="btn btn-primary" onclick="window.open('https://dev.twitch.tv/console/apps', '_blank')">
+                Open Twitch Developer Console
+            </button>
+        </div>
+
+        <!-- Step 2: Enter Credentials -->
+        <div class="setup-section">
+            <h2 class="section-title">Step 2: Enter Your Credentials</h2>
+
+            <form id="credentials-form">
+                <div class="form-group">
+                    <label for="client-id">Client ID:</label>
+                    <input type="text" id="client-id" name="client_id" required
+                           placeholder="Paste your Client ID here">
+                </div>
+
+                <div class="form-group">
+                    <label for="client-secret">Client Secret:</label>
+                    <input type="password" id="client-secret" name="client_secret" required
+                           placeholder="Paste your Client Secret here">
+                </div>
+
+                <div class="form-group">
+                    <label for="username">Your Twitch Username:</label>
+                    <input type="text" id="username" name="username" required
+                           placeholder="Enter your Twitch username">
+                </div>
+            </form>
+        </div>
+
+        <!-- Step 3: Authorize -->
+        <div class="setup-section">
+            <h2 class="section-title">Step 3: Authorize with Twitch</h2>
+            <p class="section-desc">Click below to open Twitch and authorize the app.</p>
+
+            <div class="auth-row">
+                <button type="button" id="btn-authorize" class="btn btn-primary" onclick="startOAuth()">
+                    Authorize with Twitch
+                </button>
+                <span id="auth-status" class="auth-status status-pending">Not authorized</span>
+            </div>
+        </div>
+
+        <!-- Save & Continue -->
+        <div class="setup-section setup-footer">
+            <button type="button" id="btn-save" class="btn btn-success" onclick="saveAndContinue()" disabled>
+                Save & Start App
+            </button>
+            <p class="privacy-note">Your credentials are stored locally and never shared.</p>
+        </div>
+    </div>
+
+    <!-- Completion Modal -->
+    <div id="modal-complete" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content completion-modal">
+            <h2 class="success-title">You're all set!</h2>
+            <p>Configuration saved successfully.</p>
+
+            <div class="branding-section">
+                <p class="brand-title">Built by FameForecast</p>
+                <p class="brand-tagline">The talent showcase platform for content creators</p>
+            </div>
+
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-secondary" onclick="window.open('https://fameforecast.com', '_blank')">
+                    Visit FameForecast.com
+                </button>
+                <button type="button" class="btn btn-primary" onclick="window.location.href='/select-channels'">
+                    Let's Go!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Store tokens after OAuth
+        let accessToken = null;
+        let refreshToken = null;
+
+        function copyField(fieldId) {
+            const field = document.getElementById(fieldId);
+            field.select();
+            document.execCommand('copy');
+
+            // Visual feedback
+            const btn = field.nextElementSibling;
+            const originalText = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = originalText, 1500);
+        }
+
+        function startOAuth() {
+            const clientId = document.getElementById('client-id').value.trim();
+            const clientSecret = document.getElementById('client-secret').value.trim();
+
+            if (!clientId || !clientSecret) {
+                alert('Please enter your Client ID and Client Secret first.');
+                return;
+            }
+
+            // Update status
+            document.getElementById('auth-status').textContent = 'Waiting for authorization...';
+            document.getElementById('auth-status').className = 'auth-status status-pending';
+            document.getElementById('btn-authorize').disabled = true;
+
+            // Save credentials before redirect (in case popup doesn't work)
+            saveCredentialsBeforeAuth();
+
+            // Build OAuth URL
+            const scopes = 'user:read:follows chat:read chat:edit';
+            const redirectUri = '{{ redirect_uri }}';
+            const authUrl = `https://id.twitch.tv/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=${encodeURIComponent(scopes)}`;
+
+            // Open OAuth window
+            const authWindow = window.open(authUrl, 'TwitchAuth', 'width=500,height=700');
+
+            // Poll for OAuth completion (callback will post message)
+            const pollInterval = setInterval(() => {
+                try {
+                    // Check if window was closed
+                    if (authWindow.closed) {
+                        clearInterval(pollInterval);
+                        document.getElementById('btn-authorize').disabled = false;
+
+                        // Check URL for code (if redirected back)
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const code = urlParams.get('code');
+
+                        if (code) {
+                            exchangeCode(code, clientId, clientSecret);
+                        } else if (!accessToken) {
+                            document.getElementById('auth-status').textContent = 'Authorization cancelled';
+                            document.getElementById('auth-status').className = 'auth-status status-error';
+                        }
+                    }
+                } catch (e) {
+                    // Cross-origin - window still open
+                }
+            }, 500);
+
+            // Listen for message from callback window
+            window.addEventListener('message', function handler(event) {
+                if (event.data && event.data.type === 'oauth_code') {
+                    clearInterval(pollInterval);
+                    window.removeEventListener('message', handler);
+                    exchangeCode(event.data.code, clientId, clientSecret);
+                }
+            });
+        }
+
+        async function exchangeCode(code, clientId, clientSecret) {
+            try {
+                const response = await fetch('/api/oauth/exchange', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        code: code,
+                        client_id: clientId,
+                        client_secret: clientSecret,
+                        redirect_uri: '{{ redirect_uri }}'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    accessToken = data.access_token;
+                    refreshToken = data.refresh_token;
+
+                    document.getElementById('auth-status').textContent = 'Authorized!';
+                    document.getElementById('auth-status').className = 'auth-status status-success';
+                    document.getElementById('btn-save').disabled = false;
+                } else {
+                    throw new Error(data.error || 'Token exchange failed');
+                }
+            } catch (err) {
+                document.getElementById('auth-status').textContent = 'Failed - try again';
+                document.getElementById('auth-status').className = 'auth-status status-error';
+                document.getElementById('btn-authorize').disabled = false;
+                alert('Authorization failed: ' + err.message);
+            }
+        }
+
+        async function saveAndContinue() {
+            const username = document.getElementById('username').value.trim();
+
+            if (!username) {
+                alert('Please enter your Twitch username.');
+                return;
+            }
+
+            if (!accessToken) {
+                alert('Please complete authorization first.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/setup/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        client_id: document.getElementById('client-id').value.trim(),
+                        client_secret: document.getElementById('client-secret').value.trim(),
+                        username: username,
+                        access_token: accessToken,
+                        refresh_token: refreshToken
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Show completion modal
+                    document.getElementById('modal-complete').classList.remove('hidden');
+                } else {
+                    throw new Error(data.error || 'Failed to save configuration');
+                }
+            } catch (err) {
+                alert('Failed to save: ' + err.message);
+            }
+        }
+
+        // Check if returning from OAuth callback with code
+        window.addEventListener('load', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+
+            if (code) {
+                // Clear the URL
+                history.replaceState({}, document.title, '/setup');
+
+                // Try to exchange - need to get credentials from localStorage
+                const clientId = localStorage.getItem('setup_client_id') || document.getElementById('client-id').value.trim();
+                const clientSecret = localStorage.getItem('setup_client_secret') || document.getElementById('client-secret').value.trim();
+
+                if (clientId && clientSecret) {
+                    // Restore values to form
+                    document.getElementById('client-id').value = clientId;
+                    document.getElementById('client-secret').value = clientSecret;
+                    exchangeCode(code, clientId, clientSecret);
+                } else {
+                    alert('Please enter your Client ID and Client Secret, then authorize again.');
+                }
+            }
+        });
+
+        // Save credentials to localStorage before OAuth redirect
+        function saveCredentialsBeforeAuth() {
+            const clientId = document.getElementById('client-id').value.trim();
+            const clientSecret = document.getElementById('client-secret').value.trim();
+            localStorage.setItem('setup_client_id', clientId);
+            localStorage.setItem('setup_client_secret', clientSecret);
+        }
+    </script>
+</body>
+</html>

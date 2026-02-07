@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FameForecast</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 80px;
+            overflow: hidden;
+        }
+
+        .ad-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 10px 20px;
+            width: 100%;
+            max-width: 728px;
+        }
+
+        .ad-content {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #9147ff 0%, #6441a5 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .brand-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #9147ff;
+        }
+
+        .divider {
+            width: 1px;
+            height: 40px;
+            background: rgba(255,255,255,0.2);
+        }
+
+        .message {
+            flex: 1;
+        }
+
+        .headline {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .subtext {
+            font-size: 11px;
+            color: #aaa;
+        }
+
+        .highlight {
+            color: #f1c40f;
+        }
+
+        .cta-btn {
+            background: linear-gradient(135deg, #9147ff 0%, #6441a5 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(145, 71, 255, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="ad-container">
+        <div class="ad-content">
+            <div class="brand">
+                <div class="logo">FF</div>
+                <span class="brand-name">FameForecast</span>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="message">
+                <div class="headline">Get discovered by <span class="highlight">real audiences.</span></div>
+                <div class="subtext">Bid for spotlight features and receive genuine viewer raids</div>
+            </div>
+        </div>
+
+        <a href="https://fameforecast.com/apply?utm_source=textview&utm_medium=header" target="_blank" class="cta-btn">
+            Apply Now
+        </a>
+    </div>
+</body>
+</html>

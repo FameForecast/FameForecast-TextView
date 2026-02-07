@@ -1,0 +1,193 @@
+/* themes.css - Dark theme matching tkinter GUI colors */
+
+:root {
+    /* Background colors (matching tkinter) */
+    --bg-primary: #1e1e1e;
+    --bg-secondary: #2b2b2b;
+    --bg-hud: #000000;
+    --bg-input: #333333;
+
+    /* Text colors */
+    --text-primary: #ffffff;
+    --text-secondary: #888888;
+    --text-muted: #666666;
+
+    /* Accent colors (matching tkinter tag_config) */
+    --accent-purple: #9147ff;   /* Twitch purple / FameForecast brand */
+    --accent-blue: #3498db;     /* SELF tag */
+    --accent-green: #2ecc71;    /* DATA tag, success */
+    --accent-yellow: #f1c40f;   /* TRANSCRIPT tag */
+    --accent-red: #e74c3c;      /* SYSTEM tag, danger */
+    --accent-cyan: #00ffff;     /* AI_SUGGESTION tag */
+    --accent-magenta: #ff00ff;  /* MENTION tag */
+    --accent-orange: #f39c12;   /* Warning */
+
+    /* UI colors */
+    --border-color: #3a3a3a;
+    --hover-bg: #3a3a3a;
+    --active-bg: #4a4a4a;
+
+    /* Font */
+    --font-mono: 'Consolas', 'Monaco', 'Courier New', monospace;
+    --font-ui: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Base body styles */
+.theme-dark {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+}
+
+/* Message tag colors (matches tkinter tag_config from gui.py) */
+.tag-chat { color: var(--text-primary); }
+.tag-transcript { color: var(--accent-yellow); font-weight: bold; }
+.tag-self { color: var(--accent-blue); font-weight: bold; }
+.tag-system { color: var(--accent-red); font-weight: bold; }
+.tag-data { color: var(--accent-green); font-style: italic; }
+.tag-mention { color: var(--accent-magenta); font-weight: bold; }
+.tag-ai_suggestion { color: var(--accent-cyan); font-weight: bold; }
+
+/* Clickable mentions (matches tkinter tag_bind behavior) */
+.mention {
+    color: var(--accent-magenta);
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.mention:hover {
+    text-decoration: underline;
+}
+
+/* Status indicators */
+.status-connected { color: var(--accent-green); }
+.status-disconnected { color: var(--accent-red); }
+.status-pending { color: var(--accent-orange); }
+.status-success { color: var(--accent-green); }
+.status-error { color: var(--accent-red); }
+
+/* Buttons */
+.btn {
+    font-family: var(--font-mono);
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.btn-primary {
+    background-color: var(--accent-purple);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #7d3ed9;
+}
+
+.btn-primary:disabled {
+    background-color: #4a4a4a;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background-color: var(--hover-bg);
+}
+
+.btn-danger {
+    background-color: var(--accent-red);
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+}
+
+.btn-success {
+    background-color: var(--accent-green);
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #27ae60;
+}
+
+.btn-large {
+    padding: 12px 32px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* Links */
+a {
+    color: var(--accent-purple);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Form inputs */
+input[type="text"],
+input[type="password"] {
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus {
+    outline: none;
+    border-color: var(--accent-purple);
+}
+
+input[readonly] {
+    background-color: var(--bg-secondary);
+    cursor: default;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* Spinner animation */
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--bg-secondary);
+    border-top: 4px solid var(--accent-purple);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

@@ -1,0 +1,22 @@
+# Build artifacts
+dist/
+build/
+*.spec
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Session data
+session_data/
+
+# Config (contains credentials)
+config.py
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log

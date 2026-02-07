@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}FameForecastTextView - Select Channels{% endblock %}
+
+{% block content %}
+<div id="channel-selector">
+    <div class="selector-header">
+        <h1 class="selector-title">Select Channels</h1>
+        <p id="channel-count" class="selector-subtitle">Loading channels...</p>
+    </div>
+
+    <!-- Quick select buttons -->
+    <div class="quick-actions">
+        <button type="button" class="btn btn-secondary" onclick="selectAll()">Select All</button>
+        <button type="button" class="btn btn-secondary" onclick="selectNone()">Select None</button>
+    </div>
+
+    <!-- Loading state -->
+    <div id="loading-state" class="loading-container">
+        <div class="spinner"></div>
+        <p>Checking live channels...</p>
+    </div>
+
+    <!-- No channels live -->
+    <div id="no-channels" class="empty-container hidden">
+        <h2>No Channels Live</h2>
+        <p>None of your followed channels are currently streaming.</p>
+        <p>We'll notify you when they go live.</p>
+        <button type="button" class="btn btn-primary" onclick="window.location.href='/'">Continue</button>
+    </div>
+
+    <!-- Channel list -->
+    <div id="channel-list-container" class="hidden">
+        <!-- Column headers -->
+        <div class="channel-header">
+            <span class="header-select">Select</span>
+            <span class="header-name">Channel</span>
+            <span class="header-viewers">Viewers</span>
+            <span class="header-game">Game</span>
+        </div>
+        <div id="channel-list" class="channel-list">
+            <!-- Channels added dynamically -->
+        </div>
+    </div>
+
+    <!-- Start button -->
+    <div id="start-section" class="start-section hidden">
+        <button type="button" id="btn-start" class="btn btn-primary btn-large" onclick="startMonitoring()">
+            Let's Go
+        </button>
+        <p class="tip-text">Tip: You can join more channels later when they go live</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let channels = [];
+    let selectedChannels = new Set();
+
+    async function loadChannels() {
+        try {
+            const response = await fetch('/api/channels/live');
+            const data = await response.json();
+
+            channels = data.channels || [];
+
+            document.getElementById('loading-state').classList.add('hidden');
+
+            if (channels.length === 0) {
+                document.getElementById('no-channels').classList.remove('hidden');
+            } else {
+                document.getElementById('channel-count').textContent =
+                    `${channels.length} channel${channels.length !== 1 ? 's are' : ' is'} live`;
+                renderChannels();
+                document.getElementById('channel-list-container').classList.remove('hidden');
+                document.getElementById('start-section').classList.remove('hidden');
+            }
+        } catch (err) {
+            console.error('Failed to load channels:', err);
+            document.getElementById('loading-state').innerHTML =
+                '<p class="error">Failed to load channels. Please refresh.</p>';
+        }
+    }
+
+    function renderChannels() {
+        const list = document.getElementById('channel-list');
+        list.innerHTML = '';
+
+        channels.forEach(channel => {
+            const item = document.createElement('div');
+            item.className = 'channel-item';
+            item.dataset.channel = channel.name;
+
+            const viewers = channel.viewers.toLocaleString();
+            const game = channel.game.length > 25 ?
+                channel.game.substring(0, 25) + '...' : channel.game;
+
+            item.innerHTML = `
+                <label class="channel-label">
+                    <input type="checkbox" class="channel-checkbox"
+                           onchange="toggleChannel('${channel.name}', this.checked)">
+                    <span class="channel-name">${channel.name}</span>
+                    <span class="channel-viewers">${viewers}</span>
+                    <span class="channel-game">${game}</span>
+                </label>
+            `;
+
+            list.appendChild(item);
+        });
+    }
+
+    function toggleChannel(name, checked) {
+        if (checked) {
+            selectedChannels.add(name);
+        } else {
+            selectedChannels.delete(name);
+        }
+        updateStartButton();
+    }
+
+    function selectAll() {
+        const checkboxes = document.querySelectorAll('.channel-checkbox');
+        checkboxes.forEach(cb => cb.checked = true);
+        channels.forEach(ch => selectedChannels.add(ch.name));
+        updateStartButton();
+    }
+
+    function selectNone() {
+        const checkboxes = document.querySelectorAll('.channel-checkbox');
+        checkboxes.forEach(cb => cb.checked = false);
+        selectedChannels.clear();
+        updateStartButton();
+    }
+
+    function updateStartButton() {
+        const btn = document.getElementById('btn-start');
+        const count = selectedChannels.size;
+
+        if (count === 0) {
+            btn.textContent = "Let's Go";
+        } else {
+            btn.textContent = `Let's Go (${count} selected)`;
+        }
+    }
+
+    async function startMonitoring() {
+        if (selectedChannels.size === 0) {
+            // Allow continuing with no channels (will wait for live)
+        }
+
+        try {
+            const response = await fetch('/api/channels/select', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    channels: Array.from(selectedChannels)
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                window.location.href = '/';
+            } else {
+                throw new Error(data.error || 'Failed to start');
+            }
+        } catch (err) {
+            alert('Failed to start: ' + err.message);
+        }
+    }
+
+    // Load channels on page load
+    document.addEventListener('DOMContentLoaded', loadChannels);
+</script>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}FameForecastTextView - Dashboard{% endblock %}
+
+{% block content %}
+<div id="dashboard">
+    <!-- Control Bar (matches tkinter control_frame) -->
+    <div id="control-bar">
+        <span id="session-id">Session: {{ session_id }}</span>
+        <div id="control-right">
+            <span id="status-label" class="status-disconnected">Status: Connecting...</span>
+            <button id="btn-exit" class="btn btn-danger">Exit</button>
+        </div>
+    </div>
+
+    <!-- Tab Container (matches ttk.Notebook) -->
+    <div id="tab-container">
+        <div id="tab-headers">
+            <!-- Tab headers added dynamically via JS -->
+        </div>
+        <div id="tab-panels">
+            <!-- Tab panels added dynamically via JS -->
+        </div>
+    </div>
+
+    <!-- Empty state when no channels -->
+    <div id="empty-state" class="hidden">
+        <div class="empty-content">
+            <h2>No Channels Selected</h2>
+            <p>Select channels to start monitoring</p>
+            <a href="/select-channels" class="btn btn-primary">Select Channels</a>
+        </div>
+    </div>
+</div>
+
+<!-- Stream Online Prompt Modal (matches PromptDialog) -->
+<div id="modal-stream-online" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+        <h2 id="prompt-channel-name" class="prompt-title">Channel IS LIVE</h2>
+        <p class="prompt-subtitle">Would you like to join this stream?</p>
+        <div class="modal-buttons">
+            <button id="btn-join" class="btn btn-primary">Join</button>
+            <button id="btn-skip" class="btn btn-secondary">Skip</button>
+        </div>
+    </div>
+</div>
+
+<!-- Reconnecting overlay -->
+<div id="reconnecting-overlay" class="hidden">
+    <div class="reconnecting-content">
+        <div class="spinner"></div>
+        <p>Reconnecting...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Initialize the app after DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        window.app = new FameForecastApp();
+    });
+</script>
+{% endblock %}
