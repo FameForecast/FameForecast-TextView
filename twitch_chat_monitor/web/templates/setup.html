@@ -27,9 +27,10 @@
             <div class="copyable-fields">
                 <div class="field-row">
                     <label>App Name:</label>
-                    <input type="text" readonly value="{{ app_name }}" id="field-app-name">
+                    <input type="text" readonly value="{{ app_name }}" id="field-app-name" data-base-app-name="{{ app_name }}">
                     <button type="button" class="btn-copy" onclick="copyField('field-app-name')">Copy</button>
                 </div>
+                <p class="section-desc">Recommended: append your Twitch username to the app name (example: {{ app_name }}_yourusername) so each user has a unique app.</p>
                 <div class="field-row">
                     <label>OAuth Redirect URL:</label>
                     <input type="text" readonly value="{{ redirect_uri }}" id="field-redirect">
@@ -296,6 +297,21 @@
             localStorage.setItem('setup_client_id', clientId);
             localStorage.setItem('setup_client_secret', clientSecret);
         }
+
+        function updateAppNameSuggestion() {
+            const username = document.getElementById('username')?.value.trim().toLowerCase();
+            const appNameField = document.getElementById('field-app-name');
+            if (!appNameField) return;
+
+            const baseName = appNameField.dataset.baseAppName || appNameField.value;
+            appNameField.value = username ? `${baseName}_${username}` : baseName;
+        }
+
+        const usernameInput = document.getElementById('username');
+        if (usernameInput) {
+            usernameInput.addEventListener('input', updateAppNameSuggestion);
+        }
+        updateAppNameSuggestion();
     </script>
 </body>
 </html>
