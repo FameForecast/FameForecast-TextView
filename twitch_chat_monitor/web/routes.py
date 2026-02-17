@@ -30,9 +30,10 @@ def index():
 @bp.route('/setup')
 def setup():
     """Setup wizard page"""
+    redirect_uri = url_for('main.oauth_callback', _external=True)
     return render_template('setup.html',
                            app_name="FameForecastTextView",
-                           redirect_uri="http://localhost:8080/oauth/callback")
+                           redirect_uri=redirect_uri)
 
 
 @bp.route('/select-channels')
@@ -118,7 +119,7 @@ def oauth_exchange():
     code = data.get('code')
     client_id = data.get('client_id')
     client_secret = data.get('client_secret')
-    redirect_uri = data.get('redirect_uri', 'http://localhost:3000')
+    redirect_uri = data.get('redirect_uri') or url_for('main.oauth_callback', _external=True)
 
     if not all([code, client_id, client_secret]):
         return jsonify({'error': 'Missing required fields'}), 400

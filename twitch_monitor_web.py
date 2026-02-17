@@ -9,6 +9,7 @@ Opens browser to http://localhost:8080
 
 import os
 import sys
+import socket
 
 # Add parent directory to path so we can import shared twitch_chat_monitor module
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -40,7 +41,7 @@ def main():
     from twitch_chat_monitor.web import create_app, socketio, QueueBridge
 
     # Settings
-    HOST = '127.0.0.1'
+    HOST = '0.0.0.0'
     PORT = 8080
     MAX_CHANNELS_PER_CONN = 10
 
@@ -490,7 +491,7 @@ def main():
     # Open browser after short delay
     def open_browser():
         time.sleep(1.5)
-        url = f'http://{HOST}:{PORT}'
+        url = f'http://127.0.0.1:{PORT}'
         print(f"Opening browser to {url}")
         webbrowser.open(url)
 
@@ -500,7 +501,13 @@ def main():
     print(f"\n{'='*50}")
     print("FameForecastTextView - Web Interface")
     print(f"{'='*50}")
-    print(f"Server: http://{HOST}:{PORT}")
+    print(f"Local URL: http://127.0.0.1:{PORT}")
+    try:
+        lan_ip = socket.gethostbyname(socket.gethostname())
+        if lan_ip and not lan_ip.startswith("127."):
+            print(f"LAN URL:   http://{lan_ip}:{PORT}")
+    except Exception:
+        pass
     print("Press Ctrl+C to exit.\n")
 
     try:
