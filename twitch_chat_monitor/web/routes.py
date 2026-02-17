@@ -206,7 +206,7 @@ def join_channel():
     """Join a channel"""
     context = current_app.context
     data = request.json
-    channel = data.get('channel')
+    channel = (data.get('channel') or '').strip().lower()
 
     if not channel:
         return jsonify({'error': 'No channel specified'}), 400
@@ -214,7 +214,12 @@ def join_channel():
     if not context:
         return jsonify({'error': 'Not initialized'}), 500
 
-    # Put join command on queue
+    # Add to active channels so backend workers start
+    context.active_channels.add(channel)
+    if hasattr(context, 'selected_channels'):
+        context.selected_channels.add(channel)
+
+    # Emit a join signal via queue for any connected clients
     context.gui_queue.put(('GUI_JOIN_NOW', 'SYSTEM', channel))
 
     return jsonify({'success': True, 'channel': channel})
@@ -225,7 +230,7 @@ def select_channels_api():
     """Set the initial list of channels to monitor"""
     context = current_app.context
     data = request.json
-    channels = data.get('channels', [])
+    channels = [str(ch).strip().lower() for ch in data.get('channels', []) if str(ch).strip()]
 
     if not context:
         return jsonify({'error': 'Not initialized'}), 500

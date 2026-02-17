@@ -36,6 +36,7 @@ def main():
     from pathlib import Path
 
     from twitch_chat_monitor.user_config import user_config
+    from twitch_chat_monitor.logger import DataLogger
     from twitch_chat_monitor.web import create_app, socketio, QueueBridge
 
     # Settings
@@ -64,9 +65,11 @@ def main():
             self.live_data = {}
             self.follower_counts = {}
             self.selected_channels = set()
+            self.data_dir = DATA_DIR
 
     # Create context first (needed for app creation)
     context = RuntimeContext()
+    context.data_logger = DataLogger(DATA_DIR)
 
     # Load credentials if setup is complete
     if user_config.is_setup_complete():
@@ -455,10 +458,6 @@ def main():
             return
 
         from twitch_chat_monitor.whisper import whisper_worker
-        from twitch_chat_monitor.logger import DataLogger
-
-        data_logger = DataLogger(DATA_DIR)
-        context.data_logger = data_logger
 
         p_whisper = mp.Process(
             target=whisper_worker,

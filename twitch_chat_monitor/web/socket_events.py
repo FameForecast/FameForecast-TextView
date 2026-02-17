@@ -56,12 +56,6 @@ def register(socketio, context):
             _shutdown_timer = threading.Timer(3.0, _trigger_shutdown)
             _shutdown_timer.start()
 
-
-def _trigger_shutdown():
-    """Force shutdown the application"""
-    print("[WebSocket] All clients disconnected. Exiting...")
-    os._exit(0)
-
     @socketio.on('send_chat')
     def handle_send_chat(data):
         """
@@ -72,20 +66,19 @@ def _trigger_shutdown():
         message = data.get('message', '').strip()
 
         if channel and message and context:
-            # Put on send queue (same as tkinter's send_msg)
             context.send_queue.put((channel, message))
-
-            # Echo back confirmation
             emit('chat_sent', {'channel': channel, 'message': message})
 
     @socketio.on('join_channel')
     def handle_join_channel(data):
         """User accepts prompt to join a new channel"""
-        channel = data.get('channel')
+        channel = (data.get('channel') or '').strip().lower()
 
         if channel and context:
-            context.gui_queue.put(('GUI_JOIN_NOW', 'SYSTEM', channel))
-            emit('join_accepted', {'channel': channel})
+            context.active_channels.add(channel)
+            if hasattr(context, 'selected_channels'):
+                context.selected_channels.add(channel)
+            emit('channel_joined', {'channel': channel})
 
     @socketio.on('skip_channel')
     def handle_skip_channel(data):
@@ -107,3 +100,9 @@ def _trigger_shutdown():
     def handle_ping():
         """Simple ping/pong for connection health check"""
         emit('pong', {'time': __import__('time').time()})
+
+
+def _trigger_shutdown():
+    """Force shutdown the application"""
+    print("[WebSocket] All clients disconnected. Exiting...")
+    os._exit(0)

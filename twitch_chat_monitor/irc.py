@@ -100,6 +100,7 @@ class IRCShard(threading.Thread):
             self.username = context.bot_state['bot_username']
         else:
             self.username = BOT_USERNAME
+        self.data_dir = getattr(context, 'data_dir', DATA_DIR)
 
         # Real-time user tracking: channel → set of lowercase usernames
         self.channel_users = {chan.lower(): set() for chan in channels}
@@ -237,16 +238,17 @@ class IRCShard(threading.Thread):
                 self.sock.close()
             except:
                 pass
-        metrics_file = DATA_DIR / f"shard_{self.shard_id}_metrics.json"
-        metrics = {
-            'shard_id': self.shard_id,
-            'channels': self.channels,
-            'message_count': self.message_count,
-            'runtime_seconds': time.time() - self.start_time,
-            'rate_limiter_metrics': self.limiter.get_metrics()
-        }
-        with open(metrics_file, 'w') as f:
-            json.dump(metrics, f, indent=2)
+        if self.data_dir:
+            metrics_file = self.data_dir / f"shard_{self.shard_id}_metrics.json"
+            metrics = {
+                'shard_id': self.shard_id,
+                'channels': self.channels,
+                'message_count': self.message_count,
+                'runtime_seconds': time.time() - self.start_time,
+                'rate_limiter_metrics': self.limiter.get_metrics()
+            }
+            with open(metrics_file, 'w') as f:
+                json.dump(metrics, f, indent=2)
 
     def connect(self, channels=None):
         if channels is not None:
